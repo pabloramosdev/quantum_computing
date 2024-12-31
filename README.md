@@ -1,2 +1,3 @@
-# quantum_computing
-Notebooks on quantum computing algorithms
+# Quantum Computing
+
+Some insteresting quantum computing algorithms
