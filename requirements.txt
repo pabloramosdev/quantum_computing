@@ -4,4 +4,4 @@ matplotlib==3.10.8
 pennylane==0.43.1
 cvxpy==1.7.5
 ecos==2.0.14
-jupyter==7.5.1
+notebook==7.5.1
