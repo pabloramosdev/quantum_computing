@@ -35,7 +35,7 @@ def is_vertex_cover(G: Graph, cover: set[int]) -> bool:
     """
     Check if the given set 'cover' is a vertex cover of graph G.
     A vertex cover is a set of vertices such that every edge in the graph
-    has at least one endpoint in the set.
+    has at least one node in the set.
     
     Args:
         G: A NetworkX graph.
@@ -58,29 +58,14 @@ def uncovered_edges(G: Graph, cover: set[int]) -> list[tuple[int, int]]:
     """
     return [(u, v) for u, v in G.edges() if u not in cover and v not in cover]
 
-
-def show_cover_2(G: Graph, cover: set[int], title: str):
+def show_cover(G: Graph, cover: set[int], title: str, legend: bool = True) -> None:
     """"
     Visualize the graph G highlighting the vertices in the vertex cover.
         Args:
             G: A NetworkX graph.
             cover: A set of vertices representing the vertex cover.
             title: Title for the plot.
-    """
-
-    node_colors = ['orange' if n in cover else 'lightgray' for n in G.nodes()]
-    plt.figure(figsize=(5, 4))
-    draw_kamada_kawai(G, with_labels=True, node_color=node_colors, edge_color='gray')
-    plt.title(title)
-    orange_patch = mpatches.Patch(color='orange', label='En Cover')
-    gray_patch = mpatches.Patch(color='lightgray', label='Fuera del Cover')
-    plt.legend(handles=[orange_patch, gray_patch], loc='lower left')
-    plt.tight_layout()
-    plt.show()
-
-def show_cover(G: Graph, cover: set[int], title: str):
-    """
-    Visualize the graph G highlighting the vertices in the vertex cover.
+            legend: Whether to display the legend.
     """
     node_colors = ['orange' if n in cover else 'lightgray' for n in G.nodes()]
 
@@ -96,9 +81,10 @@ def show_cover(G: Graph, cover: set[int], title: str):
 
     ax.set_title(title)
 
-    orange_patch = mpatches.Patch(color="orange", label="En Cover")
-    gray_patch = mpatches.Patch(color="lightgray", label="Fuera del Cover")
-    ax.legend(handles=[orange_patch, gray_patch], loc="lower left")
+    if legend:
+        orange_patch = mpatches.Patch(color="orange", label="En Cover")
+        gray_patch = mpatches.Patch(color="lightgray", label="Fuera del Cover")
+        ax.legend(handles=[orange_patch, gray_patch], loc="lower left")
 
     fig.tight_layout()
     plt.show()
