@@ -30,7 +30,7 @@ class Simplifier():
 
     def simplify(self, graph: Graph, solution_set: set[int], correlation_matrix: ndarray) -> tuple[Graph, set[int]]:
         """
-        Apply simplification rules to the graph based on the correlation matrix and update the solution set.
+        Apply simplification rules to the graph based on the correlation matrix and updates the solution set.
         Args:
             graph (Graph): The input graph for the combinatorial optimization problem.
             solution_set (set[int]): The current solution set of node indices.
