@@ -1,6 +1,7 @@
 # Environments
 .env
 .env.*
+.ipynb*
 .venv
 .venv.*
 env/
@@ -8,3 +9,4 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+__pycache__/
