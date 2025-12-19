@@ -1,182 +1,69 @@
-# Quantum and Classical Approaches for the Minimum Vertex Cover Problem
+# Quantum Notebooks
 
-This repository provides a comparative implementation of quantum and classical algorithms
-for solving the **Minimum Vertex Cover (MVC)** problem on graphs.
+This repository provides a collection of notebooks and reference implementations of quantum algorithms, with a particular focus on combinatorial optimization problems.
 
-The project includes:
+The main emphasis is placed on the Quantum Approximate Optimization Algorithm (QAOA) and the Quantum-Informed Recursive Optimization (QIRO) algorithm, along with supporting utilities for graph generation and visualization.
 
-- A **quantum implementation of QAOA** (Quantum Approximate Optimization Algorithm),
-- A **quantum-informed recursive algorithm (QIRO)** built on top of QAOA correlations,
-- A **classical exact solver** based on convex optimization using **CVXPY with the ECOS_BB solver**.
+## Disclaimer
 
-All quantum algorithms are implemented using **PennyLane**, enabling execution on simulators
-and, in principle, on quantum hardware.
+This repository is intended for educational and research purposes only.
 
----
+The QIRO implementation provided in this repository is an independent and original implementation developed by the author. It is not affiliated with, endorsed by, or derived from any official or reference implementation of QIRO, nor from any other existing software implementation.
 
-## 📌 Algorithms Implemented
+The implementation is based solely on the algorithms and methodological descriptions presented in the original QIRO research paper:
 
-### 🔹 QAOA (Quantum Approximate Optimization Algorithm)
+https://arxiv.org/abs/2308.13607
 
-QAOA is a variational quantum algorithm designed to approximately solve combinatorial
-optimization problems by alternating between:
+Any design choices, simplifications, extensions, or implementation details are the author’s own and may differ from those used in other implementations.
 
-- a **cost Hamiltonian** encoding the MVC objective, and
-- a **mixer Hamiltonian** that explores the solution space.
+Furthermore, the provided implementations represent simplified versions of complex quantum algorithms and are not necessarily optimized for performance or scalability. Users are encouraged to further analyze, adapt, and refine these algorithms for practical or experimental applications.
 
-The implementation provided in this repository is modular and configurable, allowing
-different circuit depths, Hamiltonians, and optimization strategies.
+The algorithms have been tested primarily on the Minimum Vertex Cover problem using graphs with up to 15 nodes. Most experiments were conducted using the PennyLane simulators `default.qubit` and `lightning.qubit`. Additionally, limited tests were performed using `lightning.kokkos` on Linux for graphs with up to 27 nodes.
 
----
 
-### 🔹 QIRO (Quantum-Informed Recursive Optimization)
+## The structure of this repository is the following one:
+- algorithms/: contains the implementation of quantum algorithms such as QAOA and QIRO for solving combinatorial optimization problems.
+- utils.py: contains utility functions for graph generation, visualization, and evaluation of vertex covers.
+- Minimum Vertex Cover.ipynb: A Jupyter notebook demonstrating the use of the implemented algorithms to solve the Minimum Vertex Cover problem on random graphs.
+- max_cut_problem.ipynb: A Jupyter notebook demonstrating the use of the implemented algorithms to solve the Max-Cut problem on random graphs.
+- quantum_support_vector_machine.ipynb: A Jupyter notebook demonstrating the use of quantum support vector machines.
 
-QIRO is a hybrid quantum–classical algorithm that extends QAOA by exploiting information
-extracted from shallow quantum circuits, in particular **one-point and two-point correlation
-functions**, to iteratively reduce the size of a combinatorial optimization problem.
+## Minimum Vertex Cover Problem
+The Minimum Vertex Cover (MVC) problem is a classic combinatorial optimization problem.
+Given a graph $G = (V, E)$, the goal is to find the smallest subset of vertices $C \subseteq V$ such that every edge in $E$ is incident to at least one vertex in $C$.
+This repository provides implementations of quantum algorithms such as QAOA and QIRO to tackle the MVC problem, along with classical method for comparison.
 
-The original QIRO algorithm was introduced in:
+## Minimum Vertex Cover Notebook
+The `Minimum Vertex Cover.ipynb` notebook demonstrates how to use the implemented quantum algorithms to solve the MVC problem on random graphs. It includes the following sections:
+1. Graph Generation: Random graph is generated for testing the algorithms.
+2. Classical Solution: A classical solver is used to find the optimal vertex cover for comparison. ECOS_BB is used as the classical solver.
+3. QAOA Solution: The Quantum Approximate Optimization Algorithm (QAOA) is implemented to find approximate solutions to the MVC problem.
+4. QIRO Solution: The Quantum-Informed Recursive Optimization (QIRO) algorithm is implemented to improve the solutions obtained from QAOA.
+5. Visualization: The results are visualized, showing the original graph and the vertex covers found by the algorithms.
 
-J. Finžgar et al., *Quantum-Informed Recursive Optimization Algorithms*,  
-PRX Quantum 5, 020327 (2024).  
-https://doi.org/10.1103/PRXQuantum.5.020327
+## Requirements
+To run the notebooks and use the implementations, you need to have Python installed:
+- Python 3.10 or higher
 
-The implementation provided in this repository is **inspired by the conceptual ideas described
-in the original QIRO paper**, but it is **not a copy** of the original algorithm nor of any
-existing reference implementation.
+## Installation
+1. Clone the repository:
+   ```bash
+    git clone https://github.com/pabloramosdev/quantum_computing.git
+    cd quantum_computing
+    ```
+2. Create a virtual environment (optional but recommended):
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    ```
 
-In particular:
+3. Install the required packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
+## Usage
+To run the Minimum Vertex Cover notebook, navigate to the repository directory and launch Jupyter Notebook:
 
-- The implementation has been **developed independently from scratch**.
-- No source code from the original authors or from any third-party repository has been reused.
-- The software architecture, data structures, and simplification routines are **original**.
-- While the algorithm follows the *principles* described in the paper, the concrete realization
-  differs in structure and implementation details.
-
-As such, the QIRO implementation in this repository constitutes an **original contribution**
-intended for experimentation, analysis, and further research.
-
----
-
-### 🔹 Classical Solver (CVXPY + ECOS_BB)
-
-As a classical baseline, the Minimum Vertex Cover problem is also solved **exactly** using:
-
-- **CVXPY** for problem formulation,
-- the **ECOS_BB** mixed-integer solver.
-
-This solver is used to obtain reference solutions for comparison with the quantum approaches.
-
----
-
-## 🧪 Example Usage
-
-The repository includes a Jupyter notebook:
-
-Minimum Vertex Cover.ipynb
-
-This notebook demonstrates:
-- how to define a graph instance,
-- how to run **QAOA**, **QIRO**, and the **classical solver**,
-- and how to compare their results.
-
-It serves as a **self-contained example** of how to use the three approaches implemented
-in this repository.
-
----
-
-## 🐍 Python Version
-
-The code in this repository has been developed and tested using:
-
-- **Python 3.12.10**
-
-Compatibility with other Python versions has not been tested.
-
----
-
-## 📦 Requirements
-
-All required Python packages and their tested versions are listed in `requirements.txt`.
-
-The main dependencies include:
-- NumPy
-- SciPy
-- Matplotlib
-- PennyLane
-- CVXPY
-- ECOS
-
----
-
-## 🛠️ Installation Guide
-
-### 1️⃣ Check Python version
-
-Make sure you are using the correct Python version:
-
-python --version
-
----
-
-### 2️⃣ (Recommended) Create a virtual environment
-
-It is strongly recommended to use a virtual environment to avoid dependency conflicts.
-
-python -m venv venv
-
-Activate it:
-
-Windows:
-venv\Scripts\activate
-
-Linux / macOS:
-source venv/bin/activate
-
----
-
-### 3️⃣ Install dependencies
-
-Upgrade pip and install the required packages:
-
-pip install --upgrade pip  
-pip install -r requirements.txt
-
----
-
-### 4️⃣ Verify the installation
-
-You can verify that the main dependencies are correctly installed by running:
-
-python -c "import pennylane, cvxpy, networkx, numpy, scipy, matplotlib; print('Environment OK')"
-
----
-
-### 5️⃣ Run the example notebook
-
-Launch Jupyter and open the example notebook:
-
-jupyter notebook
-
-Then run:
-
-Minimum Vertex Cover.ipynb
-
----
-
-## 🎯 Purpose of the Project
-
-This repository is intended for:
-- research and experimentation with variational quantum algorithms,
-- studying hybrid quantum–classical optimization strategies,
-- benchmarking quantum algoritms against exact classical solvers.
-
-The code is written with clarity and modularity in mind, making it suitable as a starting
-point for further research or extensions.
-
----
-
-## ✉️ Contact
-
-If you are interested in this work or would like to discuss extensions or collaborations,
-feel free to get in touch.
+```bash
+jupyter notebook "Minimum Vertex Cover.ipynb"
+```
