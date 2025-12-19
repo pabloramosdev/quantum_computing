@@ -5,3 +5,4 @@ pennylane==0.43.1
 cvxpy==1.7.5
 ecos==2.0.14
 notebook==7.5.1
+scikit-learn==1.6.1

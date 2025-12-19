@@ -1,6 +1,7 @@
 # Environments
 .env
 .env.*
+.ipynb*
 .venv
 .venv.*
 env/
