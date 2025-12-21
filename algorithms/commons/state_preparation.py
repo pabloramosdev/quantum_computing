@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Optional
 
 from numpy import ndarray, zeros, float64
 from numpy.random import random
@@ -10,21 +10,22 @@ from pennylane import device
 
 from .qaoa_builder import QAOABuilder
 
+from ..problems import (
+    Problem, 
+    QAOAProblemMapping
+    )
+
 
 @dataclass
 class QAOAConfig:
     p: int = 1
     device_name: str = "default.qubit"
     shots: int = 100
-    hamiltonian_factory: Callable = None
-    constrained: bool = False
     init_params: Optional[ndarray] = field(default=None)
 
     def __post_init__(self):
         if self.p < 1:
             raise ValueError("p must be >= 1")
-        if self.hamiltonian_factory is None:
-            raise ValueError("hamiltonian_factory must be provided")
         if self.init_params is None:
             self.init_params = random(2 * self.p)
 
@@ -35,17 +36,7 @@ class OptimizationConfig:
     maxiter: int = 100
 
 class StatePreparation:
-    """Class to prepare QAOA states and optimize parameters and return counts.
-    Attributes:
-        qaoa_config (QAOAConfig): Configuration for QAOA.
-        optimization_config (OptimizationConfig): Configuration for optimization.
-    Methods:
-        prepare_qaoa_state(graph: Graph) -> ndarray:
-            Prepare the QAOA state and optimize parameters.
-        get_counts(graph: Graph, params: ndarray = None) -> dict:
-            Get measurement counts from the QAOA state.
-        
-    """
+
     def __init__(self, qaoa_config: QAOAConfig, optimization_config: OptimizationConfig = OptimizationConfig()):
         """Constructor for StatePreparation.
         Args:
@@ -55,23 +46,14 @@ class StatePreparation:
         self.qaoa_config = qaoa_config
         self.optimization_config = optimization_config
 
-    def prepare_qaoa_state(self, graph: Graph) -> ndarray:
-        """Prepare the QAOA state and optimize parameters.
+    def prepare_qaoa_state(self, problem: Problem) -> ndarray:
+
+        if not isinstance(problem, QAOAProblemMapping):
+            raise TypeError("Problem must be an instance of QAOAProblemMapping")
         
-        Args:
-            graph (Graph): The input graph for the combinatorial optimization problem.
-            Returns: ndarray: Optimized parameters for the QAOA state.
-        Raises:
-            TypeError: If the input graph is not a networkx.Graph instance.
-        """
-        if not isinstance(graph, Graph):
-            raise TypeError("Graph must be an instance of networkx.Graph")
-        
-        constrained = self.qaoa_config.constrained
         device_name = self.qaoa_config.device_name
         p = self.qaoa_config.p
         shots = self.qaoa_config.shots
-        hamiltonian_factory = self.qaoa_config.hamiltonian_factory
 
         method = self.optimization_config.method
         tol = self.optimization_config.tol
@@ -79,12 +61,13 @@ class StatePreparation:
         init_params = self.qaoa_config.init_params
 
         # Build cost hamiltonian and mixer hamiltonian
-        cost_h, mixer_h = hamiltonian_factory(graph, constrained=constrained)
+        cost_h, mixer_h = problem.cost_and_mixer_hamiltonians()
         
         # Build QAOA circuit
         qaoa_circuit = QAOABuilder(p=p, cost_h=cost_h, mixer_h=mixer_h)
 
         # Set up device
+        graph = problem.get_graph()
         wires = list(graph.nodes())
         dev = device(name=device_name, wires=wires, shots=shots)
 
@@ -98,35 +81,26 @@ class StatePreparation:
             raise RuntimeError("Optimization failed: " + results.message)
         
         return results.x
-    
-    def get_counts(self, graph: Graph, params: ndarray = None) -> dict:
-        """Get measurement counts from the QAOA state.
-        Args:
-            graph (Graph): The input graph for the combinatorial optimization problem.
-            params (ndarray, optional): Parameters for the QAOA state. If None, uses optimized parameters.
-        Returns:
-            dict: Measurement counts from the QAOA state.
-        Raises:
-            TypeError: If the input graph is not a networkx.Graph instance or params is not an ndarray.
-        """
-        if not isinstance(graph, Graph):
-            raise TypeError("Graph must be an instance of networkx.Graph")
+
+    def get_counts(self, problem: Problem, params: ndarray = None) -> dict:
+
+        if not isinstance(problem, QAOAProblemMapping):
+            raise TypeError("Problem must be an instance of QAOAProblemMapping")
         if params is not None and not isinstance(params, ndarray):
             raise TypeError("Parameters must be an ndarray")
 
         p = self.qaoa_config.p
         shots = self.qaoa_config.shots
-        hamiltonian_factory = self.qaoa_config.hamiltonian_factory
-        constrained = self.qaoa_config.constrained
         device_name = self.qaoa_config.device_name
 
         # Build cost hamiltonian and mixer hamiltonian
-        cost_h, mixer_h = hamiltonian_factory(graph, constrained=constrained)
+        cost_h, mixer_h = problem.cost_and_mixer_hamiltonians()
 
         # Build QAOA circuit
         qaoa_circuit = QAOABuilder(p=p, cost_h=cost_h, mixer_h=mixer_h)
         
         # Set up device
+        graph = problem.get_graph()
         wires = list(graph.nodes())
         dev = device(name=device_name, wires=wires, shots=shots)
 
@@ -155,34 +129,25 @@ class CorrelationPreparation:
         """
         self.qaoa_config = qaoa_config
 
-    def prepare_correlation_matrix(self, graph: Graph, params: ndarray = None) -> ndarray:
-        """Prepare the correlation matrix using QAOA states.
-        Args:
-            graph (Graph): The input graph for the combinatorial optimization problem.
-            params (ndarray, optional): Parameters for the QAOA state.
-        Returns:
-            ndarray: Correlation matrix.
-        Raises:
-            TypeError: If the input graph is not a networkx.Graph instance or params is not an ndarray.
-        """
-        if not isinstance(graph, Graph):
-            raise TypeError("Graph must be an instance of networkx.Graph")
+    def prepare_correlation_matrix(self, problem: Problem, params: ndarray = None) -> ndarray:
+
+        if not isinstance(problem, QAOAProblemMapping):
+            raise TypeError("Problem must be an instance of QAOAProblemMapping")
         if params is not None and not isinstance(params, ndarray):
             raise TypeError("Parameters must be an ndarray")
 
-        constrained = self.qaoa_config.constrained
         device_name = self.qaoa_config.device_name
         p = self.qaoa_config.p
         shots = self.qaoa_config.shots
-        hamiltonian_factory = self.qaoa_config.hamiltonian_factory
 
         # Build cost hamiltonian and mixer hamiltonian
-        cost_h, mixer_h = hamiltonian_factory(graph, constrained=constrained)
+        cost_h, mixer_h = problem.cost_and_mixer_hamiltonians()
 
         # Build QAOA circuit
         qaoa_circuit = QAOABuilder(p=p, cost_h=cost_h, mixer_h=mixer_h)
         
         # Set up device
+        graph = problem.get_graph()
         wires = list(graph.nodes())
         dev = device(name=device_name, wires=wires, shots=shots)
 
