@@ -1,6 +1,6 @@
-from networkx import Graph
-
 from abc import ABC, abstractmethod
+
+from ..problems import Problem
 
 class OnePointRule(ABC):
     """
@@ -10,18 +10,7 @@ class OnePointRule(ABC):
     """
 
     @abstractmethod
-    def apply(self, node: int, correlation: float, reduced_graph: Graph, updated_solution: set[int]):
-        """
-        Applies the one-point rule to the given node.
-        Args:
-            node: Node of the graph.
-            correlation: Correlation of the node with the solution set.
-            reduced_graph: Reduced graph where the rules are applied.
-            updated_solution: Updated solution set.
-        Returns:
-            reduced_graph: Updated reduced graph.
-            updated_solution: Updated solution set.
-        """
+    def apply(self, node: int, correlation: float, problem: Problem, updated_solution: set[int]):
         pass
 
 class TwoPointsRule(ABC):
@@ -32,91 +21,64 @@ class TwoPointsRule(ABC):
     """
 
     @abstractmethod
-    def apply(self, u: int, v: int, correlation: float, reduced_graph: Graph, updated_solution: set[int]):
-        """
-        Applies the two-points rule to the given edge.
-        Args:
-            u: First node of the edge.
-            v: Second node of the edge.
-            correlation: Correlation of the edge with the solution set.
-            reduced_graph: Reduced graph where the rules are applied.
-            updated_solution: Updated solution set.
-        Returns:
-            reduced_graph: Updated reduced graph.
-            updated_solution: Updated solution set.
-        """
+    def apply(self, u: int, v: int, correlation: float, problem: Problem, updated_solution: set[int]):
         pass
 
 
 class VertexCoverOnePointRule(OnePointRule):
     """ Rule of one point for the Vertex Cover problem.
     """
-    def apply(self, node: int, correlation: float, reduced_graph: Graph, updated_solution: set[int]):
+    def apply(self, node: int, correlation: float, problem: Problem, updated_solution: set[int]):
         """
-        Applies the one-point rule to the given node.
-        If the correlation is positive, the neighbors of the node are added to the solution set.
-        If the correlation is negative, the node is added to the solution set and removed from the reduced graph.
-
+        Apply the one-point rule for Vertex Cover problem.
         Args:
-            node: Node of the graph.
-            correlation: Correlation of the node with the solution set.
-            reduced_graph: Reduced graph where the rules are applied.
-            updated_solution: Updated solution set.
-        Returns:
-            reduced_graph: Updated reduced graph.
-            updated_solution: Updated solution set.
+            node (int): The node index.
+            correlation (float): The correlation value ⟨Z⟩ for the node.
+            problem (Problem): The input problem for the combinatorial optimization problem.
+            updated_solution (set[int]): The current solution set to be updated.
         """
         if correlation >= 0:
-            neighbors = list(reduced_graph.neighbors(node))
+            neighbors = list(problem.neighbors(node))
             updated_solution.update(neighbors)
-            reduced_graph.remove_nodes_from(neighbors + [node])
+            problem.remove_nodes(neighbors + [node])
             print(f"[MVC-3] Node {node} with ⟨Z⟩ = {correlation:.4f} -> neighbors {neighbors} added to cover, node {node} and neighbors removed from graph.")
         else:
             updated_solution.add(node)
-            reduced_graph.remove_node(node)
+            problem.remove_node(node)
             print(f"[MVC-4] Node {node} with ⟨Z⟩ = {correlation:.4f} -> added to cover.")
         
-        isolated = [n for n in reduced_graph.nodes if reduced_graph.degree[n] == 0]
-        reduced_graph.remove_nodes_from(isolated)
+        isolated = [n for n in problem.nodes() if problem.degree(n) == 0]
+        problem.remove_nodes(isolated)
 
         if isolated:
             print(f"Isolated nodes removed: {isolated}")
-
-        return reduced_graph, updated_solution
 
 class VertexCoverTwoPointsRule(TwoPointsRule):
     """Rule of two points for the Vertex Cover problem.
     """
-    def apply(self, u: int, v: int, correlation: float, reduced_graph: Graph, updated_solution: set[int]):
+    def apply(self, u: int, v: int, correlation: float, problem: Problem, updated_solution: set[int]):
         """
-        Applies the two-points rule to the given edge.
-        If the correlation is negative, the node with higher degree is added to the solution set.
-        If the correlation is positive, both nodes are added to the solution set.
+        Apply the two-points rule for Vertex Cover problem.
         Args:
-            u: First node of the edge.
-            v: Second node of the edge.
-            correlation: Correlation of the edge with the solution set.
-            reduced_graph: Reduced graph where the rules are applied.
-            updated_solution: Updated solution set.
-        Returns:
-            reduced_graph: Updated reduced graph.
-            updated_solution: Updated solution set.
+            u (int): The first node index.
+            v (int): The second node index.
+            correlation (float): The correlation value ⟨ZZ⟩ for the edge (u, v).
+            problem (Problem): The input problem for the combinatorial optimization problem.
+            updated_solution (set[int]): The current solution set to be updated.
         """
+
         if correlation < 0:
-            chosen = u if reduced_graph.degree[u] >= reduced_graph.degree[v] else v
+            chosen = u if problem.degree(u) >= problem.degree(v) else v
             updated_solution.add(chosen)
-            reduced_graph.remove_node(chosen)
+            problem.remove_node(chosen)
             print(f"[MVC-1] Edge ({u}, {v}) with correlation <ZZ> = {correlation:.4f} -> node {chosen} added to cover.")
         else:
             updated_solution.update([u, v])
-            reduced_graph.remove_nodes_from([u, v])
+            problem.remove_nodes([u, v])
             print(f"[MVC-2] Edge ({u}, {v}) with correlation <ZZ> = {correlation:.4f} -> nodes {u}, {v} added to cover.")
         
-        isolated = [n for n in reduced_graph.nodes if reduced_graph.degree[n] == 0]
-        reduced_graph.remove_nodes_from(isolated)
+        isolated = [n for n in problem.nodes() if problem.degree(n) == 0]
+        problem.remove_nodes(isolated)
 
         if isolated:
             print(f"Isolated nodes removed: {isolated}")
-        
-        return reduced_graph, updated_solution
-

@@ -1,6 +1,5 @@
-from networkx import Graph
-
 from ..commons.state_preparation import StatePreparation
+from ..problems import Problem
 
 class QAOASolver:
     """Class to solve combinatorial optimization problems using QAOA.
@@ -17,21 +16,14 @@ class QAOASolver:
         """
         self.state_preparation = state_preparation
 
-    def solve(self, graph: Graph) -> str:
-        """Solve the combinatorial optimization problem on the given graph.
-        Args:
-            graph (Graph): The input graph for the combinatorial optimization problem.
-        Returns:
-            str: The solution as a set of node indices.
-        Raises:
-            TypeError: If the input graph is not a networkx.Graph instance.
-        """
-        if not isinstance(graph, Graph):
-            raise TypeError("El grafo debe ser una instancia de networkx.Graph")
+    def solve(self, problem: Problem) -> str:
 
-        optimized_params = self.state_preparation.prepare_qaoa_state(graph)
+        if not isinstance(problem, Problem):
+            raise TypeError("El problema debe ser una instancia de Problem")
+
+        optimized_params = self.state_preparation.prepare_qaoa_state(problem)
         
-        counts = self.state_preparation.get_counts(graph=graph, params=optimized_params)
+        counts = self.state_preparation.get_counts(problem=problem, params=optimized_params)
         
         max_bitstring = max(counts, key=counts.get)
 
