@@ -58,7 +58,15 @@ def uncovered_edges(G: Graph, cover: set[int]) -> list[tuple[int, int]]:
     """
     return [(u, v) for u, v in G.edges() if u not in cover and v not in cover]
 
-def show_cover(G: Graph, cover: set[int], title: str, legend: bool = True) -> None:
+
+def is_independent_set(G: Graph, indep: set[int]) -> bool:
+    return all(not (u in indep and v in indep) for u, v in G.edges())
+
+def violating_edges(G: Graph, indep: set[int]) -> list[tuple[int, int]]:
+    return [(u, v) for u, v in G.edges() if u in indep and v in indep]
+
+
+def show_solution(G: Graph, cover: set[int], title: str, text_orange: str = "Inside Solution", text_gray: str = "Outside solution", legend: bool = True) -> None:
     """"
     Visualize the graph G highlighting the vertices in the vertex cover.
         Args:
@@ -82,8 +90,8 @@ def show_cover(G: Graph, cover: set[int], title: str, legend: bool = True) -> No
     ax.set_title(title)
 
     if legend:
-        orange_patch = mpatches.Patch(color="orange", label="En Cover")
-        gray_patch = mpatches.Patch(color="lightgray", label="Fuera del Cover")
+        orange_patch = mpatches.Patch(color="orange", label=text_orange)
+        gray_patch = mpatches.Patch(color="lightgray", label=text_gray)
         ax.legend(handles=[orange_patch, gray_patch], loc="lower left")
 
     fig.tight_layout()
