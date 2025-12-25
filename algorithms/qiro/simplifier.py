@@ -1,10 +1,3 @@
-from numpy import (
-    ndarray, 
-    abs, 
-    argmax, 
-    unravel_index
-)
-
 from .rules import OnePointRule, TwoPointsRule
 
 from ..problems import Problem
@@ -26,25 +19,33 @@ class Simplifier():
         """
         self.one_point_rule = one_point_rule
         self.two_points_rule = two_points_rule
-
-    def simplify(self, problem: Problem, updated_solution: set[int], correlation_matrix: ndarray):
+    def simplify(self, problem: Problem, updated_solution: set[int], correlation_dict: list[tuple[float, tuple[int, int]]]):
         """
         Apply simplification rules to the given problem and update the solution set.
+
         Args:
             problem (Problem): The input problem for the combinatorial optimization problem.
             updated_solution (set[int]): The current solution set to be updated.
-            correlation_matrix (ndarray): The correlation matrix used for simplification.
+            correlation_dict (list[tuple[float, tuple[int, int]]]): The correlation values with corresponding node pairs.
+        
+        Raises:
+            NoApplicableSimplificationRuleError: If no applicable simplification rule is found.
         """
-        # Finds the index of the coordinate with the maximum absolute correlation value in the flattened matrix
-        max_corr_flatten_index = argmax(abs(correlation_matrix))
+        # Iterate over correlation entries and try to apply the simplification rules.
+        # If rule is applied, return immediately. If the rule is not applicable, continue to the next entry.
+        # It raises an error if no rule is applicable.
+        for correlation, (u, v) in correlation_dict:
 
-        # Get the coordinates of the maximum correlation in the matrix
-        u, v = unravel_index(max_corr_flatten_index, correlation_matrix.shape)
+            if u == v:
+                rule_applied = self.one_point_rule.apply(u, correlation, problem, updated_solution)
+            else:
+                rule_applied = self.two_points_rule.apply(u, v, correlation, problem, updated_solution)
+            
+            if rule_applied:
+                return
+        
+        raise NoApplicableSimplificationRuleError("No applicable simplification rule found.")
 
-        # Get the correlation value at the coordinates
-        correlation = correlation_matrix[u, v]
-
-        if u == v:
-            return self.one_point_rule.apply(int(u), correlation, problem, updated_solution)
-        else:
-            return self.two_points_rule.apply(int(u), int(v), correlation, problem, updated_solution)
+class NoApplicableSimplificationRuleError(RuntimeError):
+    """Exception raised when no applicable simplification rule is found."""
+    pass

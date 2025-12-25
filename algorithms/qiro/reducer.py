@@ -34,7 +34,8 @@ class Reducer:
         optimized_params = self.state_preparation.prepare_qaoa_state(problem=simplified_problem)
 
         # Build the correlation matrix with the optimal parameters
-        correlation_matrix = self.correlation_preparation.prepare_correlation_matrix(problem=simplified_problem, params=optimized_params)
+        correlation_entries = self.correlation_preparation.prepare_correlation_matrix(problem=simplified_problem, params=optimized_params)
 
         # Apply simplification rules to reduce the graph and update the solution
-        self.simplifier.simplify(simplified_problem, updated_solution, correlation_matrix)
+        self.simplifier.simplify(simplified_problem, updated_solution, correlation_entries)
+    
