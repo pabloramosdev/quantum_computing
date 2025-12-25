@@ -18,8 +18,7 @@ class Simplifier():
             two_points_rule (TwoPointsRule): Rule to apply for two-points simplification.
         """
         self.one_point_rule = one_point_rule
-        self.two_points_rule = two_points_rule        
-    
+        self.two_points_rule = two_points_rule
     def simplify(self, problem: Problem, updated_solution: set[int], correlation_dict: list[tuple[float, tuple[int, int]]]):
         """
         Apply simplification rules to the given problem and update the solution set.
