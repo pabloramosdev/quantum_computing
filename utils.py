@@ -67,7 +67,7 @@ def violating_edges(G: Graph, indep: set[int]) -> list[tuple[int, int]]:
 
 
 def show_solution(G: Graph, cover: set[int], title: str, text_orange: str = "Inside Solution", text_gray: str = "Outside solution", legend: bool = True) -> None:
-    """"
+    """
     Visualize the graph G highlighting the vertices in the vertex cover.
         Args:
             G: A NetworkX graph.
