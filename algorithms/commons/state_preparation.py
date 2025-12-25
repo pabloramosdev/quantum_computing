@@ -188,7 +188,7 @@ class CorrelationPreparation:
         for idx, node in enumerate(node_list):
             entries.append((float(one_point[idx]), (node, node)))
 
-         # two-point: (u,v)
+        # two-point: (u,v)
         for k, (u, v) in enumerate(edge_list):
             entries.append((float(two_point[k]), (u, v)))
 
