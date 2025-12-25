@@ -48,5 +48,4 @@ class Simplifier():
 
 class NoApplicableSimplificationRuleError(RuntimeError):
     """Exception raised when no applicable simplification rule is found."""
-    def __init__(self, message: str):
-        super().__init__(message)
+    pass
