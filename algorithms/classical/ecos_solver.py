@@ -1,5 +1,5 @@
 # Library cvxpy allows us to formulate optimization problems mathematically
-# It works with various solvers; in this notebook, we will use the ECOS_BB solver
+# It works with various solvers; in this module, we will use the ECOS_BB solver
 from networkx import Graph
 
 from cvxpy import (
