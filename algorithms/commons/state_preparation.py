@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
-from numpy import ndarray, zeros, float64
+from numpy import ndarray
 from numpy.random import random
 from networkx import Graph
 from scipy.optimize import minimize
@@ -129,7 +129,7 @@ class CorrelationPreparation:
         """
         self.qaoa_config = qaoa_config
 
-    def prepare_correlation_matrix(self, problem: Problem, params: ndarray = None) -> ndarray:
+    def prepare_correlation_matrix(self, problem: Problem, params: ndarray = None) -> list[tuple[float, tuple[int, int]]]:
 
         if not isinstance(problem, QAOAProblemMapping):
             raise TypeError("Problem must be an instance of QAOAProblemMapping")
@@ -158,30 +158,40 @@ class CorrelationPreparation:
         correlations = correlation_qnode(params=params)
 
         # Return correlation matrix
-        return CorrelationPreparation._build_correlation_matrix(correlations, graph)
-
+        return CorrelationPreparation._build_corr_entries(correlations, graph)
+    
     @staticmethod
-    def _build_correlation_matrix(results: ndarray, G: Graph) -> ndarray:
-        """Build the correlation matrix from correlations qnode results.
+    def _build_corr_entries(results: ndarray, G: Graph) -> list[tuple[float, tuple[int, int]]]:
+        """Build the sorted correlation entries from QAOA measurement results.
+        Note: Better to return a list of tuples instead of a full matrix for easier processing.
         Args:
-            results (ndarray): Measurement results from the correlation qnode.
-            G (Graph): The input graph for the combinatorial optimization problem.
+            results (ndarray): The QAOA measurement results.
+            G (Graph): The input graph.
         Returns:
-            ndarray: Correlation matrix.
+            list[tuple[float, tuple[int, int]]]: The correlation entries as a list of tuples.
         """
-        node_list = list(G.nodes())
-        edge_list = list(G.edges())
+        node_list = sorted(G.nodes())
+        edge_list = sorted((min(u, v), max(u, v)) for (u, v) in G.edges())
 
-        one_point = results[:len(node_list)]
-        two_point = results[len(node_list):]
+        n = len(node_list)
+        m = len(edge_list)
+    
+        if results.shape[0] != n + m:
+            raise ValueError(f"Expected results length {n+m} (n={n}, m={m}), got {results.shape[0]}")
 
-        max_index = max(node_list) + 1 if node_list else 0
-        M = zeros((max_index, max_index), dtype=float64)
+        one_point = results[:n]
+        two_point = results[n:n + m]
+        
+        entries: list[tuple[float, tuple[int, int]]] = []
 
-        for idx, i in enumerate(node_list):
-            M[i, i] = one_point[idx]
+        # one-point: (node,node)
+        for idx, node in enumerate(node_list):
+            entries.append((float(one_point[idx]), (node, node)))
 
-        for idx, (i, j) in enumerate(edge_list):
-            M[i, j] = M[j, i] = two_point[idx]
+         # two-point: (u,v)
+        for k, (u, v) in enumerate(edge_list):
+            entries.append((float(two_point[k]), (u, v)))
 
-        return M
+        # Sort by absolute correlation value in descending order
+        entries.sort(key=lambda t: abs(t[0]), reverse=True)
+        return entries
