@@ -32,7 +32,7 @@ class Problem:
         return self.graph
 
     def degree(self, node: int) -> int:
-        return self.graph.degree[node]
+        return int(self.graph.degree(node))
 
     def neighbors(self, node: int) -> list[int]:
         return list(self.graph.neighbors(node))
