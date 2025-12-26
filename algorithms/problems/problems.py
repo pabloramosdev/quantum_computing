@@ -61,39 +61,110 @@ class QAOAProblemMapping(ABC, Problem):
 class MaxCut(QAOAProblemMapping):
     
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
+        """Returns the cost and mixer Hamiltonians for the Max-Cut problem on the graph.
+
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.maxcut.html
+        
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+        """
         return maxcut(self.graph)
 
 class MaxCliqueXMixer(QAOAProblemMapping):
     
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
+        """Returns the cost and mixer Hamiltonians for the Max-Clique problem on the graph.
+        
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.max_clique.html
+
+        Mixer: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.x_mixer.html
+        
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+        """
         return max_clique(self.graph)
 
 class MaxCliqueBitFlipMixer(QAOAProblemMapping):
     
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
+        """Returns the cost and mixer Hamiltonians for the Max-Clique problem on the graph.
+        
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.max_clique.html
+
+        Mixer: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.bit_flip_mixer.html
+
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+        """
         return max_clique(self.graph, constrained=True)
 
 class MinVertexCoverXMixer(QAOAProblemMapping):
     
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
+        """Returns the cost and mixer Hamiltonians for the Min-Vertex-Cover problem on the graph.
+        
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.min_vertex_cover.html
+        
+        Mixer: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.x_mixer.html
+
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+        """
+
         return min_vertex_cover(self.graph)
 
 class MinVertexCoverBitFlipMixer(QAOAProblemMapping):
     
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
+        """Returns the cost and mixer Hamiltonians for the Min-Vertex-Cover problem on the graph.
+        
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.min_vertex_cover.html
+        
+        Mixer: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.bit_flip_mixer.html
+        
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+        """
         return min_vertex_cover(self.graph, constrained=True)
 
 class MaxWeightCycleXMixer(QAOAProblemMapping):
     
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
+        """Returns the cost and mixer Hamiltonians for the Max-Weight-Cycle problem on the graph.
+        
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.max_weight_cycle.html
+
+        Mixer: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.x_mixer.html
+
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+        """
         return max_weight_cycle(self.graph)
 
-class MaxWeightCycleBitFlipMixer(QAOAProblemMapping):
+class MaxWeightCycleConstrainedMixer(QAOAProblemMapping):
     
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
+        """Returns the cost and mixer Hamiltonians for the Max-Weight-Cycle problem on the graph.
+
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.max_weight_cycle.html
+        
+        Mixer: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cycle.cycle_mixer.html
+        
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+        """
         return max_weight_cycle(self.graph, constrained=True)
 
 class MaxIndependentSetXMixer(QAOAProblemMapping):
+    """Returns the cost and mixer Hamiltonians for the Max-Independent-Set problem on the graph.
+
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.max_independent_set.html
+
+        Mixer: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.x_mixer.html
+
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+    """
     
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
         return max_independent_set(self.graph)
@@ -101,4 +172,13 @@ class MaxIndependentSetXMixer(QAOAProblemMapping):
 class MaxIndependentSetBitFlipMixer(QAOAProblemMapping):
 
     def cost_and_mixer_hamiltonians(self) -> tuple[Hamiltonian, Hamiltonian]:
+        """Returns the cost and mixer Hamiltonians for the Max-Independent-Set problem on the graph.
+        
+        Reference: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.cost.max_independent_set.html
+        
+        Mixer: https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.bit_flip_mixer.html
+        
+        Returns:
+            tuple[Hamiltonian, Hamiltonian]: The cost and mixer Hamiltonians.
+        """
         return max_independent_set(self.graph, constrained=True)
