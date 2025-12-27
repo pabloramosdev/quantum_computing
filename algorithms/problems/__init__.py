@@ -7,7 +7,7 @@ from .problems import (
     MinVertexCoverXMixer,
     MinVertexCoverBitFlipMixer,
     MaxWeightCycleXMixer,
-    MaxWeightCycleBitFlipMixer,
+    MaxWeightCycleConstrainedMixer,
     MaxIndependentSetXMixer,
     MaxIndependentSetBitFlipMixer
 )
@@ -21,7 +21,7 @@ __all__ = [
     "MinVertexCoverXMixer",
     "MinVertexCoverBitFlipMixer",
     "MaxWeightCycleXMixer",
-    "MaxWeightCycleBitFlipMixer",
+    "MaxWeightCycleConstrainedMixer",
     "MaxIndependentSetXMixer",
     "MaxIndependentSetBitFlipMixer"
 ]

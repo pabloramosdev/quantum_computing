@@ -1,12 +1,7 @@
-from dataclasses import dataclass, field
-from typing import Optional
-
 from numpy import ndarray
 from numpy.random import random
-from networkx import Graph
-from scipy.optimize import minimize
 
-from pennylane import device
+from .optimization import Optimizer
 
 from .qaoa_builder import QAOABuilder
 
@@ -15,163 +10,86 @@ from ..problems import (
     QAOAProblemMapping
     )
 
-
-@dataclass
-class QAOAConfig:
-    p: int = 1
-    device_name: str = "default.qubit"
-    shots: int = 100
-    init_params: Optional[ndarray] = field(default=None)
-
-    def __post_init__(self):
-        if self.p < 1:
-            raise ValueError("p must be >= 1")
-        if self.init_params is None:
-            self.init_params = random(2 * self.p)
-
-@dataclass
-class OptimizationConfig:
-    method: str = "COBYLA"
-    tol: float = 1e-2
-    maxiter: int = 100
-
 class StatePreparation:
 
-    def __init__(self, qaoa_config: QAOAConfig, optimization_config: OptimizationConfig = OptimizationConfig()):
-        """Constructor for StatePreparation.
-        Args:
-            qaoa_config (QAOAConfig): Configuration for QAOA.
-            optimization_config (OptimizationConfig): Configuration for optimization.
-        """
-        self.qaoa_config = qaoa_config
-        self.optimization_config = optimization_config
+    def __init__(self, qaoa_config: dict, optimizer: Optimizer = Optimizer()):
+        default_config = {"p": 1, "device_name": "default.qubit", "shots": 100, "init_params": None}
 
-    def prepare_qaoa_state(self, problem: Problem) -> ndarray:
+        overrides = qaoa_config or {}
+
+        # check for invalid keys in overrides
+        invalid = set(overrides) - set(default_config)
+        if invalid:
+            raise ValueError(f"Invalid QAOA config keys: {sorted(invalid)}. Allowed keys are: {sorted(default_config)}")
+
+        # update default config with overrides
+        default_config.update({k: overrides[k] for k in default_config if k in overrides})
+
+        if type(default_config["p"]) is not int or default_config["p"] < 1:
+            raise ValueError("p must be an int >= 1")
+        if type(default_config["shots"]) is not int or default_config["shots"] <= 0:
+            raise ValueError("shots must be a positive int")
+        if type(default_config["device_name"]) is not str:
+            raise ValueError("device_name must be a string")
+        
+        self.p = default_config["p"]
+        self.device_name = default_config["device_name"]
+        self.shots = default_config["shots"]
+        init_params = default_config["init_params"]
+        self.init_params = init_params if init_params is not None else random(2 * self.p)
+
+        self.qaoa_builder = QAOABuilder(p=self.p, device_name=self.device_name, shots=self.shots)
+        self.optimizer = optimizer
+
+    def optimize(self, problem: Problem) -> ndarray:
 
         if not isinstance(problem, QAOAProblemMapping):
             raise TypeError("Problem must be an instance of QAOAProblemMapping")
-        
-        device_name = self.qaoa_config.device_name
-        p = self.qaoa_config.p
-        shots = self.qaoa_config.shots
-
-        method = self.optimization_config.method
-        tol = self.optimization_config.tol
-        maxiter = self.optimization_config.maxiter
-        init_params = self.qaoa_config.init_params
-
-        # Build cost hamiltonian and mixer hamiltonian
-        cost_h, mixer_h = problem.cost_and_mixer_hamiltonians()
-        
-        # Build QAOA circuit
-        qaoa_circuit = QAOABuilder(p=p, cost_h=cost_h, mixer_h=mixer_h)
-
-        # Set up device
-        graph = problem.get_graph()
-        wires = list(graph.nodes())
-        dev = device(name=device_name, wires=wires, shots=shots)
 
         # Build cost QNode
-        cost_qnode = qaoa_circuit.build_qnode(dev)
-
-        # Optimize parameters
-        results = minimize(cost_qnode, x0=init_params, method=method, tol=tol, options={"maxiter": maxiter})
+        cost_qnode = self.qaoa_builder.build(problem, measurement="expval")
         
-        if not results.success:
-            raise RuntimeError("Optimization failed: " + results.message)
-        
-        return results.x
+        return self.optimizer.optimize(cost_qnode, self.init_params)
 
-    def get_counts(self, problem: Problem, params: ndarray = None) -> dict:
+    def counts(self, problem: Problem, params: ndarray = None) -> dict:
 
         if not isinstance(problem, QAOAProblemMapping):
             raise TypeError("Problem must be an instance of QAOAProblemMapping")
-        if params is not None and not isinstance(params, ndarray):
+        if params is None:
+            raise ValueError("params are required")
+        if not isinstance(params, ndarray):
             raise TypeError("Parameters must be an ndarray")
 
-        p = self.qaoa_config.p
-        shots = self.qaoa_config.shots
-        device_name = self.qaoa_config.device_name
-
-        # Build cost hamiltonian and mixer hamiltonian
-        cost_h, mixer_h = problem.cost_and_mixer_hamiltonians()
-
-        # Build QAOA circuit
-        qaoa_circuit = QAOABuilder(p=p, cost_h=cost_h, mixer_h=mixer_h)
-        
-        # Set up device
-        graph = problem.get_graph()
-        wires = list(graph.nodes())
-        dev = device(name=device_name, wires=wires, shots=shots)
-
         # Build cost QNode
-        cost_qnode = qaoa_circuit.build_qnode(dev, return_counts=True)
+        counts_qnode = self.qaoa_builder.build(problem, measurement="counts")
 
-        # Evaluate counts with oprimized parameters
-        counts = cost_qnode(params=params)
+        # Evaluate counts with provided parameters
+        counts = counts_qnode(params=params)
 
         return counts
 
-class CorrelationPreparation:
-    """Class to prepare correlation matrices using QAOA states.
-    Attributes:
-        qaoa_config (QAOAConfig): Configuration for QAOA.
-    Methods:
-        prepare_correlation_matrix(graph: Graph, params: ndarray = None) -> ndarray:
-            Prepare the correlation matrix using QAOA states.
-        build_correlation_matrix(results: ndarray, G: Graph) -> ndarray:
-            Build the correlation matrix from QAOA measurement results.
-    """
-    def __init__(self, qaoa_config: QAOAConfig):
-        """Constructor for CorrelationPreparation.
-        Args:
-            qaoa_config (QAOAConfig): Configuration for QAOA.
-        """
-        self.qaoa_config = qaoa_config
-
-    def prepare_correlation_matrix(self, problem: Problem, params: ndarray = None) -> list[tuple[float, tuple[int, int]]]:
+    def correlations(self, problem: Problem, params: ndarray = None) -> list[tuple[float, tuple[int, int]]]:
 
         if not isinstance(problem, QAOAProblemMapping):
             raise TypeError("Problem must be an instance of QAOAProblemMapping")
-        if params is not None and not isinstance(params, ndarray):
+        if params is None:
+            raise ValueError("params are required")
+        if not isinstance(params, ndarray):
             raise TypeError("Parameters must be an ndarray")
 
-        device_name = self.qaoa_config.device_name
-        p = self.qaoa_config.p
-        shots = self.qaoa_config.shots
-
-        # Build cost hamiltonian and mixer hamiltonian
-        cost_h, mixer_h = problem.cost_and_mixer_hamiltonians()
-
-        # Build QAOA circuit
-        qaoa_circuit = QAOABuilder(p=p, cost_h=cost_h, mixer_h=mixer_h)
-        
-        # Set up device
-        graph = problem.get_graph()
-        wires = list(graph.nodes())
-        dev = device(name=device_name, wires=wires, shots=shots)
-
         # Build correlation QNode
-        correlation_qnode = qaoa_circuit.build_correlations_qnode(dev, graph)
+        correlation_qnode = self.qaoa_builder.build(problem, measurement="correlations")
 
-        # Evaluate correlations with oprimized parameters
+        # Evaluate correlations with provided parameters
         correlations = correlation_qnode(params=params)
 
-        # Return correlation matrix
-        return CorrelationPreparation._build_corr_entries(correlations, graph)
-    
+        # Return correlation entries
+        return StatePreparation._build_corr_entries(correlations, problem)
+
     @staticmethod
-    def _build_corr_entries(results: ndarray, G: Graph) -> list[tuple[float, tuple[int, int]]]:
-        """Build the sorted correlation entries from QAOA measurement results.
-        Note: Better to return a list of tuples instead of a full matrix for easier processing.
-        Args:
-            results (ndarray): The QAOA measurement results.
-            G (Graph): The input graph.
-        Returns:
-            list[tuple[float, tuple[int, int]]]: The correlation entries as a list of tuples.
-        """
-        node_list = sorted(G.nodes())
-        edge_list = sorted((min(u, v), max(u, v)) for (u, v) in G.edges())
+    def _build_corr_entries(results: ndarray, problem: Problem) -> list[tuple[float, tuple[int, int]]]:
+        node_list = sorted(problem.nodes())
+        edge_list = sorted((min(u, v), max(u, v)) for (u, v) in problem.edges())
 
         n = len(node_list)
         m = len(edge_list)
