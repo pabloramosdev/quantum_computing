@@ -21,9 +21,9 @@ class QAOASolver:
         if not isinstance(problem, Problem):
             raise TypeError("El problema debe ser una instancia de Problem")
 
-        optimized_params = self.state_preparation.prepare_qaoa_state(problem)
+        optimized_params = self.state_preparation.optimize(problem)
         
-        counts = self.state_preparation.get_counts(problem=problem, params=optimized_params)
+        counts = self.state_preparation.counts(problem=problem, params=optimized_params)
         
         max_bitstring = max(counts, key=counts.get)
 
