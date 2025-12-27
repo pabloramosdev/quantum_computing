@@ -1,13 +1,9 @@
 from .state_preparation import (
-    QAOAConfig, 
-    OptimizationConfig, 
     StatePreparation, 
-    CorrelationPreparation
+    Optimizer
 )
 
 __all__ = [ 
-    "QAOAConfig", 
-    "OptimizationConfig", 
     "StatePreparation", 
-    "CorrelationPreparation"
+    "Optimizer"
 ]
